@@ -1,0 +1,2 @@
+#!/bin/sh
+python prj4.py $1

@@ -1,0 +1,25 @@
+PROJECT 4: RAW SOCKETS
+
+
+High Level Approach:
+
+1. Sending request and receiving response
+A Python script has been created which implements raw sockets to download a file given its URL. URL is parsed to get authority and path. IP address of host is resolved. After performing TCP 3 way handshake, HTTP GET request is formed with path and host name. IP header and TCP headers are formed with required fields. HTTP request is appended to the TCP header which is in turn appended to the IP header to form a IP datagram for our request to webserver. Server sends the HTTP response which may span multiple packets. These packets are checked for correct check sum and packets with correct check sum are sequentially ACKed and written to the file on disk. Server indicates the end of response by sending FIN flag in last packet. After packet with FIN flag is received connection teardown process is initiated and connection is teared down. If during this process a packet is not received or packet with wrong checksum is received, acknowledgement for that packet is not sent so that the server knows it needs to retransmit the packet.
+
+2. TCP-IP features implemented
+Here in IP functionalities, we are checking if the remote IP is valid or not, Kernel is validating the checksum of incoming packets, we are validating the checksum of outgoing packets, packing the IP header with proper fields. In TCP functionalities, we are checking checksums of incoming and outgoing packets, selecting a valid free port to send data, checking for correct sequence and acknowledgement numbers, implemented basic timeout functionality.
+
+3. Saving the data to file
+The file downloaded and stored on disk currently contains HTTP header and data. Header needs to be removed from the file. Header is separated from the data by two pairs of carriage return and line feed characters. Header is removed from the file and file containing data is saved on the disk with the required name. 
+
+4. How to execute?
+A shell script is created which takes URL as the command line argument. Shell script calls the python script with this command line argument and finally Python script generates the output
+E.g. : ./rawhttpget http://david.choffnes.com/classes/cs4700fa14/2MB.log
+
+
+Challenges faced:
+
+1. Garbage characters at few places in the downloaded file
+Solution: Use of HTTP/1.0 instead of HTTP/1.1 solved the problem of garbage characters in the file.
+2. Receiving out of order packets and lost packets
+Solution: program is storing the previous sequence number and previous data size and comparing that with new sequence number received from server. If they do not match then it sends duplicate ACK for older packet, indicating the server to send the next packet again.
